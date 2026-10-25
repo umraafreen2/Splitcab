@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SplitCab India ðŸ‡®ðŸ‡³ - Smart Ride Pooling & Real-Time Map</title>
+  <!-- Local Leaflet for 100% offline & zero-CORS reliability -->
+  <link rel="stylesheet" href="leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header>
+    <div class="brand" onclick="location.reload()">
+      <div class="brand-icon">ðŸš•</div>
+      <div>
+        <h1>
+          SplitCab <span class="india-tag">INDIA ðŸ‡®ðŸ‡³</span>
+          <span class="currency-badge">â‚¹ INR</span>
+        </h1>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">
+          Live Real-Time Map â€¢ Distance-Based Fare Split â€¢ 1 km Proximity
+        </p>
+      </div>
+    </div>
+
+    <!-- Header Actions & Modals -->
+    <div class="header-actions">
+      <!-- Aadhaar Verification Pill -->
+      <button class="nav-pill-btn highlight-aadhaar" id="btnOpenAadhaarModal" title="UIDAI Aadhaar Verification">
+        <span>ðŸ›¡ï¸ Aadhaar KYC</span>
+        <span style="font-size: 10px; background: rgba(16,185,129,0.3); padding: 1px 5px; border-radius: 4px;">Verified âœ“</span>
+      </button>
+
+      <!-- TinyFish AI Agent Integration -->
+      <button class="nav-pill-btn highlight-tinyfish" id="btnOpenTinyFishModal" title="Live Cab Rate Comparison via TinyFish Web Agent">
+        <span>ðŸŸ TinyFish Agent</span>
+      </button>
+
+      <!-- Smart Savings Calculator -->
+      <button class="nav-pill-btn" id="btnOpenCalcModal" title="Calculate your monthly carpool savings">
+        <span>ðŸ§® Savings Calc</span>
+      </button>
+
+      <!-- Community Circles -->
+      <button class="nav-pill-btn" id="btnOpenCommunityModal" title="College & Office Community Circles">
+        <span>ðŸŽ“ Communities</span>
+      </button>
+
+      <!-- Dual vs Single Simulator Toggle -->
+      <div class="view-mode-selector">
+        <button class="view-btn active" data-mode="dual" title="Side-by-side simulator for 2 riders">
+          <span>ðŸ‘¥ Dual Simulator</span>
+        </button>
+        <button class="view-btn" data-mode="single" title="Single Passenger View">
+          <span>ðŸ‘¤ Single Rider</span>
+        </button>
+      </div>
+
+      <button class="nav-pill-btn" id="btnReset" title="Reset Simulation" style="padding: 6px 10px;">
+        <span>ðŸ”„</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main id="mainLayout" class="dual-mode">
+
+    <!-- Rider A Panel (You) -->
+    <section class="sidebar-panel" id="panelA">
+      <div class="panel-header">
+        <div class="user-badge">
+          <div class="avatar user-a">ðŸ‘¨â€ðŸ’¼</div>
+          <div class="user-meta">
+            <h3>Arjun Sharma <span style="color: #10b981; font-size: 11px;">(You)</span></h3>
+            <div class="status-pills">
+              <span class="aadhaar-verified-tag">âœ“ Aadhaar Verified</span>
+              <span class="community-pill" id="badgeCommA">ðŸ¢ Infosys Tech Hub</span>
+            </div>
+          </div>
+        </div>
+        <span style="font-size: 11px; color: #10b981; font-weight: 700;">â­ 4.96</span>
+      </div>
+
+      <div class="panel-body">
+
+        <!-- Ride Timing: Now vs Scheduled -->
+        <div class="ride-timing-tabs">
+          <button class="timing-tab active" id="tabNowA" onclick="setRideTiming('A', 'now')">
+            <span>âš¡ Ride Now</span>
+          </button>
+          <button class="timing-tab" id="tabScheduleA" onclick="setRideTiming('A', 'schedule')">
+            <span>ðŸ“… Schedule Ride</span>
+          </button>
+        </div>
+
+        <div class="schedule-picker-box" id="scheduleBoxA">
+          <div style="font-weight: 700; color: #60a5fa;">Select Ride Schedule</div>
+          <div class="schedule-row">
+            <input type="date" id="schedDateA" value="2026-10-24">
+            <select id="schedTimeSlotA">
+              <option>08:30 AM (Office Rush)</option>
+              <option>09:15 AM (Morning Peak)</option>
+              <option>06:00 PM (Evening Return)</option>
+              <option>07:30 PM (Airport Run)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- High-Demand Corridors & Route Tests -->
+        <div class="preset-section">
+          <label>Corridors & Route Matching Tests</label>
+          <div class="preset-pills">
+            <button class="preset-chip active" data-preset="delhi_noida_incompatible" title="Tests geographic incompatibility: User A in Delhi, User B in Bangalore. Verifies no Bangalore detour!">
+              ðŸ§ª Delhi âž” Noida (Vs BLR)
+            </button>
+            <button class="preset-chip" data-preset="delhi_noida_compatible" title="Tests compatible co-riders along Delhi-Noida highway corridor">
+              ðŸŽ¯ Delhi âž” Noida (Matched)
+            </button>
+            <button class="preset-chip" data-preset="blr_airport" title="Bangalore NH44 Airport Corridor">
+              âœˆï¸ BLR Airport âž” ORR
+            </button>
+            <button class="preset-chip" data-preset="mumbai_bkc" title="Mumbai Eastern Express Corridor">
+              ðŸŒŠ Mumbai BKC âž” Powai
+            </button>
+          </div>
+        </div>
+
+        <!-- Inputs Section A -->
+        <div id="inputSectionA">
+          <div class="route-input-group">
+            <div class="input-row">
+              <div class="dot pickup"></div>
+              <div class="input-content">
+                <label>Pickup Point</label>
+                <select id="pickupSelectA"></select>
+              </div>
+            </div>
+            <div class="input-row">
+              <div class="dot dropoff"></div>
+              <div class="input-content">
+                <label>Drop-off Destination</label>
+                <select id="dropSelectA"></select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vehicle Type Selector -->
+          <div style="margin-top: 10px;">
+            <div class="vehicle-selector-label">Select Vehicle Type</div>
+            <div class="vehicle-grid">
+              <div class="vehicle-card" data-veh="auto" onclick="selectVehicle('A', 'auto')">
+                <span class="vehicle-icon">ðŸ›º</span>
+                <span class="vehicle-name">Auto</span>
+                <span class="vehicle-cap">2 Seats</span>
+                <span class="vehicle-rate">â‚¹8.5/km</span>
+              </div>
+              <div class="vehicle-card active" data-veh="mini" onclick="selectVehicle('A', 'mini')">
+                <span class="vehicle-icon">ðŸš—</span>
+                <span class="vehicle-name">Mini</span>
+                <span class="vehicle-cap">2 Seats</span>
+                <span class="vehicle-rate">â‚¹12/km</span>
+              </div>
+              <div class="vehicle-card" data-veh="sedan" onclick="selectVehicle('A', 'sedan')">
+                <span class="vehicle-icon">ðŸš˜</span>
+                <span class="vehicle-name">Sedan</span>
+                <span class="vehicle-cap">3 Seats</span>
+                <span class="vehicle-rate">â‚¹15.5/km</span>
+              </div>
+              <div class="vehicle-card" data-veh="suv" onclick="selectVehicle('A', 'suv')">
+                <span class="vehicle-icon">ðŸš™</span>
+                <span class="vehicle-name">SUV XL</span>
+                <span class="vehicle-cap">4-5 Seats</span>
+                <span class="vehicle-rate">â‚¹22/km</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 1 km Proximity Boundary & Radius Filter -->
+          <div class="filter-row" style="margin-top: 10px;">
+            <div class="filter-box">
+              <label>Match Radius Limit</label>
+              <div class="radius-badge">
+                <span>ðŸ“ Max Radius</span>
+                <span>1.0 km (Strict)</span>
+              </div>
+            </div>
+            <div class="filter-box">
+              <label>Traffic Awareness</label>
+              <div class="traffic-status" id="trafficStatusA">
+                <div class="traffic-dot green"></div>
+                <span style="font-size: 11px; color: #34d399;">Clear (1.0x ETA)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Safety & Community Toggles -->
+          <div class="toggle-group" style="margin-top: 10px;">
+            <div class="toggle-card women-card" id="cardWomenA">
+              <div class="toggle-info">
+                <span style="font-size: 18px;">ðŸ›¡ï¸ðŸ‘©</span>
+                <div>
+                  <div class="title">Women-Only Pool</div>
+                  <div class="subtitle">Match exclusively with verified women</div>
+                </div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggleWomenA">
+                <span class="slider pink-slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-card community-card" id="cardCommunityA">
+              <div class="toggle-info">
+                <span style="font-size: 18px;">ðŸ¢</span>
+                <div>
+                  <div class="title">Community Exclusive</div>
+                  <div class="subtitle">Infosys / Corporate Circle only</div>
+                </div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggleCommA">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Savings Teaser Card with Distance-Based Proportional Split -->
+          <div class="savings-teaser-card" style="margin-top: 12px;">
+            <div class="price-col">
+              <div class="label">Solo Cab Cost</div>
+              <div class="price solo" id="soloPriceA">â‚¹580</div>
+              <div class="distance-split-tag" id="distA">Distance: 22 km</div>
+            </div>
+            <div class="price-col">
+              <div class="label">Proportional Split</div>
+              <div class="price shared" id="sharedPriceA">â‚¹290</div>
+              <div class="distance-split-tag" style="color: #34d399;">Exact km split</div>
+            </div>
+            <span class="save-pill" id="savePillA">SAVE 50%</span>
+          </div>
+
+          <!-- Submit Request Button -->
+          <button class="btn-primary" id="btnRequestA" style="margin-top: 14px; width: 100%;">
+            <span>âš¡ Find Shared Ride Within 1 km</span>
+          </button>
+        </div>
+
+        <!-- Dynamic State Container A -->
+        <div id="dynamicStateA" class="state-container"></div>
+      </div>
+    </section>
+
+    <!-- Rider B Panel (Nearby Passenger Simulation) -->
+    <section class="sidebar-panel panel-b" id="panelB">
+      <div class="panel-header">
+        <div class="user-badge">
+          <div class="avatar user-b">ðŸ‘©â€ðŸ’»</div>
+          <div class="user-meta">
+            <h3>Priya Nair <span style="color: #3b82f6; font-size: 11px;">(Nearby 650m Away)</span></h3>
+            <div class="status-pills">
+              <span class="aadhaar-verified-tag">âœ“ Aadhaar Verified</span>
+              <span class="community-pill" id="badgeCommB">ðŸ¢ Deloitte Circle</span>
+            </div>
+          </div>
+        </div>
+        <span style="font-size: 11px; color: #60a5fa; font-weight: 700;">â­ 4.93</span>
+      </div>
+
+      <div class="panel-body">
+        <div style="background: rgba(59,130,246,0.08); border: 1px dashed rgba(59,130,246,0.3); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 11px; color: #93c5fd;">
+          ðŸ’¡ <strong>Co-Rider Simulator:</strong> Located within 1.0 km radius. Heading in the same corridor.
+        </div>
+
+        <div id="inputSectionB">
+          <div class="route-input-group">
+            <div class="input-row">
+              <div class="dot pickup" style="background: var(--rider-b); box-shadow: 0 0 8px rgba(59,130,246,0.5);"></div>
+              <div class="input-content">
+                <label>Pickup Point</label>
+                <select id="pickupSelectB"></select>
+              </div>
+            </div>
+            <div class="input-row">
+              <div class="dot dropoff" style="background: #2563eb;"></div>
+              <div class="input-content">
+                <label>Drop-off Destination</label>
+                <select id="dropSelectB"></select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vehicle Type Display B -->
+          <div style="margin-top: 10px;">
+            <div class="vehicle-selector-label">Vehicle Type (Synced)</div>
+            <div class="vehicle-grid">
+              <div class="vehicle-card" data-veh-b="auto">
+                <span class="vehicle-icon">ðŸ›º</span>
+                <span class="vehicle-name">Auto</span>
+                <span class="vehicle-rate">â‚¹8.5/km</span>
+              </div>
+              <div class="vehicle-card active" data-veh-b="mini">
+                <span class="vehicle-icon">ðŸš—</span>
+                <span class="vehicle-name">Mini</span>
+                <span class="vehicle-rate">â‚¹12/km</span>
+              </div>
+              <div class="vehicle-card" data-veh-b="sedan">
+                <span class="vehicle-icon">ðŸš˜</span>
+                <span class="vehicle-name">Sedan</span>
+                <span class="vehicle-rate">â‚¹15.5/km</span>
+              </div>
+              <div class="vehicle-card" data-veh-b="suv">
+                <span class="vehicle-icon">ðŸš™</span>
+                <span class="vehicle-name">SUV XL</span>
+                <span class="vehicle-rate">â‚¹22/km</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Savings Teaser B -->
+          <div class="savings-teaser-card" style="margin-top: 12px;">
+            <div class="price-col">
+              <div class="label">Solo Cab Cost</div>
+              <div class="price solo" id="soloPriceB">â‚¹510</div>
+              <div class="distance-split-tag" id="distB">Distance: 19 km</div>
+            </div>
+            <div class="price-col">
+              <div class="label">Proportional Split</div>
+              <div class="price shared" id="sharedPriceB">â‚¹255</div>
+              <div class="distance-split-tag" style="color: #34d399;">Exact km split</div>
+            </div>
+            <span class="save-pill" id="savePillB">SAVE 50%</span>
+          </div>
+
+          <button class="btn-primary" id="btnRequestB" style="margin-top: 14px; width: 100%; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+            <span>âš¡ Request Shared Cab (Priya)</span>
+          </button>
+        </div>
+
+        <!-- Dynamic State Container B -->
+        <div id="dynamicStateB" class="state-container"></div>
+      </div>
+    </section>
+
+    <!-- Center/Right Live Map Visualizer -->
+    <section class="map-container">
+      
+      <!-- Top Real-Time Map Floating Toolbar -->
+      <div class="map-toolbar">
+        <div class="map-toolbar-left">
+          <div class="map-control-card">
+            <span style="font-size: 16px;">ðŸ›°ï¸</span>
+            <div>
+              <div style="font-weight: 800; font-size: 12px;">Real-Time Live Map</div>
+              <div style="font-size: 10px; color: #34d399; display: flex; align-items: center; gap: 4px;">
+                <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block;"></span>
+                <span>Active &bull; Esri &amp; OpenStreetMap &bull; No API Key Needed</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick City FlyTo -->
+          <select id="mapCitySelector" class="map-control-btn" onchange="changeMapCity(this.value)" style="outline: none;">
+            <option value="blr">ðŸ“ Bangalore Corridor</option>
+            <option value="delhi">ðŸ“ Delhi-NCR Corridor</option>
+            <option value="mumbai">ðŸ“ Mumbai BKC Corridor</option>
+          </select>
+        </div>
+
+        <div class="map-toolbar-right">
+          <!-- Live GPS Button -->
+          <button class="map-control-btn gps-pulse-btn" onclick="locateUserGPS()" title="Use your actual device location">
+            <span>ðŸŽ¯ Locate My GPS</span>
+          </button>
+
+          <!-- Map Style Switchers (No API key needed!) -->
+          <button class="map-control-btn active" id="btnMapStyleStreet" onclick="switchMapStyle('streets')" title="High-resolution street map">
+            <span>ðŸ—ºï¸ Streets</span>
+          </button>
+          <button class="map-control-btn" id="btnMapStyleOsm" onclick="switchMapStyle('osm')" title="OpenStreetMap public network">
+            <span>ðŸŒ OSM</span>
+          </button>
+          <button class="map-control-btn" id="btnMapStyleSat" onclick="switchMapStyle('satellite')" title="Real-world satellite view">
+            <span>ðŸ›°ï¸ Satellite</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Map Legend -->
+      <div class="map-legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: #10b981;"></div>
+          <span>Arjun Pickup (1.0 km Circle)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #3b82f6;"></div>
+          <span>Priya Pickup (In 1 km Radius)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #f59e0b;"></div>
+          <span>Shared Corridor & Cab</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: #14b8a6;"></div>
+          <span>Mutual Pickup Bay</span>
+        </div>
+      </div>
+
+      <!-- Real-time Leaflet Map Container -->
+      <div id="leafletMap"></div>
+
+      <!-- Fallback Canvas if WebGL or tiles need vector backing -->
+      <canvas id="cityMapCanvas"></canvas>
+    </section>
+
+  </main>
+  <!-- 1. Aadhaar Authentication Modal -->
+  <div class="modal-overlay" id="modalAadhaar">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>ðŸ›¡ï¸ Aadhaar e-KYC Verification</h2>
+        <button class="modal-close" onclick="closeModal('modalAadhaar')">&times;</button>
+      </div>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+        To ensure 100% passenger safety and trust, all SplitCab passengers are verified via UIDAI Aadhaar e-KYC before ride matching.
+      </p>
+
+      <div class="aadhaar-card-preview">
+        <div class="aadhaar-inner">
+          <div class="aadhaar-photo">ðŸ‘¨â€ðŸ’¼</div>
+          <div class="aadhaar-details">
+            <h4>GOVERNMENT OF INDIA â€¢ UIDAI</h4>
+            <div class="aadhaar-num" id="displayAadhaar">5482 â€¢â€¢â€¢â€¢ 9102</div>
+            <div style="font-size: 11px; color: #334155;"><strong>Name:</strong> Arjun Sharma</div>
+            <div style="font-size: 11px; color: #334155;"><strong>DOB:</strong> 14/08/1998 â€¢ Male</div>
+          </div>
+        </div>
+        <div class="aadhaar-seal">
+          <span>ðŸ”’ UIDAI Digitally Signed</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px;">
+        <label style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">12-Digit Aadhaar Number</label>
+        <input type="text" id="inputAadhaar" value="5482 7109 9102" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 8px; font-size: 14px; letter-spacing: 2px; margin-top: 4px; outline: none;">
+      </div>
+
+      <div id="aadhaarOtpRow" style="margin-top: 10px; display: none;">
+        <label style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">6-Digit OTP (Sent to linked +91 98*** **421)</label>
+        <input type="text" id="inputAadhaarOtp" placeholder="Enter 6-digit OTP (e.g. 849201)" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 8px; font-size: 14px; margin-top: 4px; outline: none;">
+      </div>
+
+      <button class="btn-primary" id="btnVerifyAadhaar" style="width: 100%; margin-top: 14px;" onclick="handleAadhaarVerify()">
+        <span>Request UIDAI OTP</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. TinyFish AI Web Agent Modal -->
+  <div class="modal-overlay" id="modalTinyFish">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>ðŸŸ TinyFish AI Web Agent Engine</h2>
+        <button class="modal-close" onclick="closeModal('modalTinyFish')">&times;</button>
+      </div>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+        <strong>TinyFish API</strong> powers autonomous headless browser agents to scrape live market cab rates (Uber, Ola, Rapido) in real-time, benchmark surge pricing, and ensure SplitCab's distance-halved price is guaranteed the cheapest.
+      </p>
+
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">TinyFish API Key</label>
+          <span style="font-size: 10px; color: #34d399; font-weight: 700;">Pre-configured Demo Key (Free) âœ“</span>
+        </div>
+        <input type="text" id="tinyFishKey" placeholder="tf_live_sample_key" value="tf_live_sample_agent_demo" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--border); color: #38bdf8; padding: 8px 10px; border-radius: 6px; font-size: 12px; margin-top: 4px; outline: none;">
+        <p style="font-size: 10px; color: var(--text-muted); margin-top: 3px;">
+          ðŸ’¡ You do not need to purchase or provide any API key. The live web-agent simulation runs autonomously.
+        </p>
+      </div>
+
+      <div class="tinyfish-terminal" id="tinyFishTerminal">
+[TinyFish Engine] Ready. Web Agent execution engine initialized.
+[TinyFish Engine] Target endpoints: Uber Web Portal, Ola Mobility, Rapido Auto.
+Click "Dispatch TinyFish Agent" to fetch live market fares.
+      </div>
+
+      <!-- Scraped Rates Table -->
+      <div style="background: rgba(8,13,26,0.6); border-radius: 8px; padding: 10px; font-size: 12px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+          <span>Uber Go Live Rate:</span>
+          <span style="font-weight: 700;" id="tfUber">â‚¹590</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+          <span>Ola Mini Live Rate:</span>
+          <span style="font-weight: 700;" id="tfOla">â‚¹565</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+          <span>Rapido Cab Live Rate:</span>
+          <span style="font-weight: 700;" id="tfRapido">â‚¹530</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--border); padding-top: 6px; color: #34d399; font-weight: 800;">
+          <span>SplitCab Shared Fare:</span>
+          <span id="tfSplit">â‚¹290 (Save 51%)</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="width: 100%;" onclick="runTinyFishScraper()">
+        <span>ðŸš€ Dispatch TinyFish Agent Scraping</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. Smart Savings Calculator Modal -->
+  <div class="modal-overlay" id="modalCalc">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>ðŸ§® Smart Savings & COâ‚‚ Calculator</h2>
+        <button class="modal-close" onclick="closeModal('modalCalc')">&times;</button>
+      </div>
+
+      <div class="calc-row">
+        <label>
+          <span>One-Way Trips per Week:</span>
+          <strong id="calcTripsVal" style="color: #60a5fa;">10 trips</strong>
+        </label>
+        <input type="range" id="calcTripsRange" min="2" max="20" value="10" oninput="updateSavingsCalc()">
+      </div>
+
+      <div class="calc-row">
+        <label>
+          <span>Average Solo Cab Cost (â‚¹):</span>
+          <strong id="calcCostVal" style="color: #fbbf24;">â‚¹500 / trip</strong>
+        </label>
+        <input type="range" id="calcCostRange" min="150" max="1200" step="25" value="500" oninput="updateSavingsCalc()">
+      </div>
+
+      <div class="calc-result-box">
+        <div class="calc-stat">
+          <div class="val" id="calcMonthlySave">â‚¹11,000</div>
+          <div class="lbl">Monthly Cash Saved</div>
+        </div>
+        <div class="calc-stat">
+          <div class="val" id="calcYearlySave">â‚¹1,32,000</div>
+          <div class="lbl">Yearly Cash Saved</div>
+        </div>
+        <div class="calc-stat">
+          <div class="val" id="calcCarbonSave" style="color: #38bdf8;">48 kg</div>
+          <div class="lbl">COâ‚‚ Reduced / Month</div>
+        </div>
+        <div class="calc-stat">
+          <div class="val" style="color: #c084fc;">50%</div>
+          <div class="lbl">Fare Cut by SplitCab</div>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="width: 100%; margin-top: 14px;" onclick="closeModal('modalCalc')">
+        <span>Start Saving Today</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. Community Modal -->
+  <div class="modal-overlay" id="modalCommunity">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>ðŸŽ“ College & Office Communities</h2>
+        <button class="modal-close" onclick="closeModal('modalCommunity')">&times;</button>
+      </div>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+        Join verified trusted circles. You can choose to pool cabs only with verified students from your university or verified employees from your company.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="background: rgba(8,13,26,0.7); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="selectCommunity('Infosys Tech Hub')">
+          <div>
+            <div style="font-weight: 700; font-size: 13px;">ðŸ¢ Infosys Corporate Circle</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Verified via @infosys.com email</div>
+          </div>
+          <span style="color: #34d399; font-size: 11px; font-weight: 700;">Active âœ“</span>
+        </div>
+
+        <div style="background: rgba(8,13,26,0.7); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="selectCommunity('BITS Pilani / IIT Campus')">
+          <div>
+            <div style="font-weight: 700; font-size: 13px;">ðŸŽ“ BITS Pilani / IIT Campus Circle</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Verified via .edu / .ac.in student ID</div>
+          </div>
+          <button class="nav-pill-btn" style="padding: 4px 8px; font-size: 11px;">Join</button>
+        </div>
+
+        <div style="background: rgba(8,13,26,0.7); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="selectCommunity('Google / Microsoft Tech')">
+          <div>
+            <div style="font-weight: 700; font-size: 13px;">ðŸ’» Google / Microsoft Tech Corridor</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Outer Ring Road Bangalore / Gurugram</div>
+          </div>
+          <button class="nav-pill-btn" style="padding: 4px 8px; font-size: 11px;">Join</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer"></div>
+
+  <!-- Local Leaflet JS (No external dependency or CORS blockers) -->
+  <script src="leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
